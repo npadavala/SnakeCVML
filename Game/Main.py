@@ -11,13 +11,13 @@ import ComputerVision
 game = PlayerSnake.Snake()
 
 # Creates rectangle for the player game button
-player_text = game.font.render("Player", True, game.black, game.green)
+player_text = game.font.render("Default", True, game.black, game.green)
 player_text_rect = player_text.get_rect()
 player_text_rect.center = (game.windowWidth // 4, 60)
 game.screen.blit(player_text, player_text_rect)
 
 # Creates rectangle for the computer vision game button
-computer_text = game.font.render("Computer", True, game.black, game.red)
+computer_text = game.font.render("CV Game", True, game.black, game.red)
 computer_text_rect = computer_text.get_rect()
 computer_text_rect.center = (game.windowWidth // 4 * 3, 60)
 game.screen.blit(computer_text, computer_text_rect)
@@ -26,11 +26,11 @@ pygame.display.update()
 """ Clears the display buttons"""
 def clearButtons():
     # Updates player button to be white
-    player_text = game.font.render("Player", True, game.white, game.white)
+    player_text = game.font.render("Default", True, game.white, game.white)
     game.screen.blit(player_text, player_text_rect)
 
      # Updates computer button to be white
-    computer_text = game.font.render("Computer", True, game.white, game.white)
+    computer_text = game.font.render("CV Game", True, game.white, game.white)
     game.screen.blit(computer_text, computer_text_rect)
 
 """ Starts a game which the player can play using wasd or arrow keys. """
