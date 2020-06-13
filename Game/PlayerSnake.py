@@ -187,9 +187,9 @@ class Snake():
         self.fruit_index = 0
 
     """ Starts the actual snake game."""
-    def startGame(self):
+    def startGame(self, speed = 200):
         # Start Timer
-        pygame.time.set_timer(pygame.USEREVENT + 1, 200)
+        pygame.time.set_timer(pygame.USEREVENT + 1, speed)
 
 """ Converts a given location to a key for openLocations dictionary """
 def convertToKey(location):
