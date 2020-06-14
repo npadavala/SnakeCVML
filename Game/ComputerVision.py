@@ -19,7 +19,7 @@ def startGame(game):
 
     # Creating 2 separate threads to update GUI and get inputs from the 
     # webcam simultaneously
-    guiThread = threading.Thread(target=cp.Player.runGame, args=(player,))
+    guiThread = threading.Thread(target=cp.Player.runGame, args=(player,), daemon=True)
     videoThread = threading.Thread(target=videoCapture, args=(), daemon=True)
     guiThread.start()
     videoThread.start()
@@ -35,8 +35,10 @@ def videoCapture():
     while True:
         check, frame = video.read()
         cv2.imshow("Capturing", frame)
+
         c = cv2.waitKey(1)
         if c == 27:
             break    
+
     video.release()
     cv2.destroyAllWindows()
