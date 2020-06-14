@@ -39,7 +39,7 @@ def playerGame():
 
 """ Starts a game which the player can play through physical movements. """
 def computerGame():
-    ComputerVision.Player(game)
+    ComputerVision.startGame(game)
 
 """ Runs the intro sequence until the player clicks the button to
 play a player version of the game. The variable intro will be set to False when

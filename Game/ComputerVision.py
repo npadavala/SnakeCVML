@@ -1,49 +1,42 @@
-""" File which runs the computer vision version of snake.
-This takes the users movements and translates them to directions in which the
-snake will move in. """
+""" File which reads video input and uses it to determine which actions are being taken.
+These actions are used to run a snake game.  """
 
 # Necessary imports
 import pygame
+import cv2
+import ComputerPlayer as cp
+import threading
 
-class Player():
-    """ Class which runs the computer vision code. The player will need
-    to move in the physical direction that they want the snake to move in. """
+player = ""
 
-    def __init__(self, game):
-        self.game = game
-        self.playerGame()
+""" Creates the computer player object and has it running in 
+its own thread. Reason for multi-threading is so that game
+can update simultaneously while we are reading inputs from the
+webcam. """
+def startGame(game):
+    # Creating the player game object
+    player = cp.Player(game)
 
-    """ Creates a game where a player can play snake. """
-    def playerGame(self):
-        self.game.startGame(speed = 500)
-        running = True
-        while running:
-            # Updates Display
-            pygame.display.update()
+    # Creating 2 separate threads to update GUI and get inputs from the 
+    # webcam simultaneously
+    guiThread = threading.Thread(target=cp.Player.runGame, args=(player,))
+    videoThread = threading.Thread(target=videoCapture, args=(), daemon=True)
+    guiThread.start()
+    videoThread.start()
 
-            # Handles events
-            for i in pygame.event.get():
-                self.directionChange()
-                # Event which occurs every second
-                if i.type == pygame.USEREVENT + 1:
-                    self.game.updateSnake()
 
-                # Quitting out of the game
-                elif i.type == pygame.QUIT:
-                    running = False
-                    pygame.quit()
-
-    """ Handles physical player movements. """
-    def directionChange(self):
-        # Stores whether or not that key has been pressed
-        keys=pygame.key.get_pressed()
-
-        # Handling of directions
-        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]):
-            self.game.setDir(1)
-        elif (keys[pygame.K_LEFT] or keys[pygame.K_a]):
-            self.game.setDir(2)
-        elif (keys[pygame.K_UP] or keys[pygame.K_w]):
-            self.game.setDir(3)
-        elif (keys[pygame.K_DOWN] or keys[pygame.K_s]):
-            self.game.setDir(4)
+""" Logic for reading from the webcam """
+def videoCapture():
+    video = cv2.VideoCapture(0)
+    # Check if the webcam is opened correctly
+    if not video.isOpened():
+        raise IOError("Cannot open webcam")
+        
+    while True:
+        check, frame = video.read()
+        cv2.imshow("Capturing", frame)
+        c = cv2.waitKey(1)
+        if c == 27:
+            break    
+    video.release()
+    cv2.destroyAllWindows()
