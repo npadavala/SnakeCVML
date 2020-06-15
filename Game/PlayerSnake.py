@@ -20,7 +20,7 @@ class Snake():
         pygame.display.set_caption('Snake')
 
         # Setting up the window
-        self.windowWidth = 800
+        self.windowWidth = 1600
         self.windowHeight = 800
         self.screen = pygame.display.set_mode([self.windowWidth,
                                                self.windowHeight])
@@ -190,6 +190,10 @@ class Snake():
     def startGame(self, speed = 200):
         # Start Timer
         pygame.time.set_timer(pygame.USEREVENT + 1, speed)
+
+    def addVideoFeed(self, frame):
+        #Add webcam feed to the pygame window
+        self.screen.blit(frame, (775, 175))
 
 """ Converts a given location to a key for openLocations dictionary """
 def convertToKey(location):
