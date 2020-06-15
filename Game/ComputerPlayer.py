@@ -5,9 +5,8 @@ snake will move in. """
 # Necessary imports
 import pygame
 import cv2
-import time
-import pandas
 import numpy as np
+
 
 class Player():
 
@@ -54,18 +53,20 @@ class Player():
     def videoCapture(self):
         check, frame = self.video.read()
 
+        # Detect the face in current webcam frame
+        self.detectFace(frame)
+        
         # Convert and resize the frame so that it is usable in pygame
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame = np.rot90(frame)
         frame = cv2.resize(frame, (450, 800))
-        frame = pygame.surfarray.make_surface(frame)
-        
-        # frame = self.detectFace(frame)
+
         # Add the frame to the pygame 
+        frame = pygame.surfarray.make_surface(frame)
         self.game.addVideoFeed(frame)
 
     def detectFace(self, frame):
-        reference_points = np.array([ 
+        two_dim_ref = np.array([ 
                                         (359, 391),      # Nose Tip
                                         (399, 561),      # Chin
                                         (337, 297),      # Left Eye Left Corner
@@ -73,7 +74,30 @@ class Player():
                                         (345, 465),      # Left Mouth Corner
                                         (453, 469)       # Right Mouth Corner
                                     ], dtype="double")
+        three_dim_ref = np.array([
+                                        (0.0, 0.0, 0.0),                # Nose Tip
+                                        (0.0, -330.0, -65.0),           # Chin
+                                        (-225.0, 170.0, -135.0),        # Left Eye Left Corner
+                                        (225.0, 170.0, -135.0),         # Right Eye Right Corner
+                                        (-150.0, -150.0, -125.0),       # Left Mouth Corner
+                                        (150.0, -150.0, -125.0),        # Right Mouth Corner
+                                ], dtype="double")
+        dim = frame.shape
+
+        # Getting camera matrix
+        focal_length_approx = dim[1] # approximating f_x and f_y with image width
+        center_x = dim[1]/2
+        center_y = dim[0]/2
+        camera_matrix = np.array(
+                                    [[focal_length_approx, 0, center_x],
+                                     [0, focal_length_approx, center_y],
+                                     [0, 0, 1]], dtype="double"
+                                )
         
+        # run estimation using cv2.solvePnP - gives us rotation and translation vectors
+        success, rotation, translation = cv2.solvePnP(three_dim_ref, two_dim_ref, camera_matrix, np.zeros((4, 1)))
+        print(rotation)
+
 
     """ Isolating the face in the webcam. (Not needed)
     def faceIsolation(self)
