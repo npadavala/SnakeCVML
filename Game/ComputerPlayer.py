@@ -22,8 +22,6 @@ class Player():
 
         # Creates the frame variable
         self.frame = ''
-        self.frameCount = 0
-        self.coords = [(0,0), (0,0)]
 
 
     """ Creates a game where a player can play snake. """
@@ -75,9 +73,14 @@ class Player():
         self.frame = pygame.surfarray.make_surface(self.frame)
         self.game.addVideoFeed(self.frame)
 
+    """ Detects the face and calculates which direction the face is turned in for snake movements. """
     def detectFace(self):
+        # 2D image points are extracted from the frame using get2DRef(),
+        # which converts frame to grayscale and extracts relevant
+        # landmark points from reference file
         two_dim_ref = self.get2DRef()
         
+        # 3D model generic reference points which are used to calculate the rotation and translation vectors
         three_dim_ref = np.array([
                                     (0.0, 0.0, 0.0),                # Nose Tip
                                     (0.0, -330.0, -65.0),           # Chin
@@ -88,7 +91,7 @@ class Player():
                                 ])
         dim = self.frame.shape
 
-        # Getting camera matrix
+        # Putting camera features into a matrix
         focal_length_approx = dim[1] # approximating f_x and f_y with image width
         center_x = dim[1]/2
         center_y = dim[0]/2
@@ -97,15 +100,22 @@ class Player():
                             [0, focal_length_approx, center_y],
                             [0, 0, 1]], dtype="double")
         
-        # run estimation using cv2.solvePnP - gives us rotation and translation vectors
+        # Run estimation using cv2.solvePnP - gives us rotation and 
+        # translation vectors. Uses Direct Linear Transform and Levenberg-Marquardt Optimization
+        # See this link https://www.learnopencv.com/head-pose-estimation-using-opencv-and-dlib/#code for more info
         try:
             success, rotation, translation = cv2.solvePnP(three_dim_ref, two_dim_ref, camera_matrix, np.zeros((4, 1)))
+            return rotation
+        
+        # Catches an error where the face isn't properly detected 
+        # and continues running the game with the previous face location
         except cv2.error as e:
-            return
+            return np.array([(0, 0, 0)])
         
 
 
-    """ Isolating the face in the webcam. """
+    """ Isolating the face in the webcam. Returns an array which has stored positions of 
+    a few select landmarks on the face. """
     def get2DRef(self):
         # Convert the frame to a gray frame to make it easier to find features
         grayFrame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY) 
@@ -116,13 +126,13 @@ class Player():
         # Get the face and find the landmarks from that face
         for face in faces:
             # Coordinates for drawing a box around the detected face
-            x1 = face.left()
-            y1 = face.top()
-            x2 = face.right()
-            y2 = face.bottom()
+            left = face.left()
+            top = face.top()
+            right = face.right()
+            bottom = face.bottom()
             
             # Add a rectangle around the detected face for the current frame
-            cv2.rectangle(self.frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
+            cv2.rectangle(self.frame, (left, top), (right, bottom), (0, 255, 0), 3)
 
             # Get the positions on the face which correspond to the dots in landmarks.dat
             landmarks = self.predictor(grayFrame, face)
@@ -130,11 +140,10 @@ class Player():
             # Return an array which represents the 2 dimensional picture coordinates which 
             # can be converted to a 3 dimensional reference
             return np.array([
-                (landmarks.part(33).x, landmarks.part(33).y),
-                (landmarks.part(8).x, landmarks.part(8).y),
-                (landmarks.part(36).x, landmarks.part(36).y),
-                (landmarks.part(45).x, landmarks.part(45).y),
-                (landmarks.part(48).x, landmarks.part(48).y),
-                (landmarks.part(54).x, landmarks.part(54).y)
+                (landmarks.part(33).x, landmarks.part(33).y),       # Nose Tip
+                (landmarks.part(8).x, landmarks.part(8).y),         # Chin
+                (landmarks.part(36).x, landmarks.part(36).y),       # Left Eye Left Corner
+                (landmarks.part(45).x, landmarks.part(45).y),       # Right Eye Right Corner
+                (landmarks.part(48).x, landmarks.part(48).y),       # Left Mouth Corner
+                (landmarks.part(54).x, landmarks.part(54).y)        # Right Mouth Corner
             ], dtype="double") 
-            
