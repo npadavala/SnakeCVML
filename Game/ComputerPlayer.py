@@ -6,15 +6,17 @@ snake will move in. """
 import pygame
 import cv2
 import numpy as np
+import dlib
 
 
 class Player():
-
     """ Class which runs the computer vision code. The player will need
     to move in the physical direction that they want the snake to move in. """
 
     def __init__(self, game):
         self.game = game
+        self.detector = dlib.get_frontal_face_detector()
+        self.predictor = dlib.shape_predictor("landmarks.dat")
 
     """ Creates a game where a player can play snake. """
     def runGame(self):
@@ -66,14 +68,8 @@ class Player():
         self.game.addVideoFeed(frame)
 
     def detectFace(self, frame):
-        two_dim_ref = np.array([ 
-                                        (359, 391),      # Nose Tip
-                                        (399, 561),      # Chin
-                                        (337, 297),      # Left Eye Left Corner
-                                        (513, 301),      # Right Eye Right Corner
-                                        (345, 465),      # Left Mouth Corner
-                                        (453, 469)       # Right Mouth Corner
-                                    ], dtype="double")
+        two_dim_ref = self.get2DRef(frame)
+        
         three_dim_ref = np.array([
                                         (0.0, 0.0, 0.0),                # Nose Tip
                                         (0.0, -330.0, -65.0),           # Chin
@@ -81,7 +77,7 @@ class Player():
                                         (225.0, 170.0, -135.0),         # Right Eye Right Corner
                                         (-150.0, -150.0, -125.0),       # Left Mouth Corner
                                         (150.0, -150.0, -125.0),        # Right Mouth Corner
-                                ], dtype="double")
+                                ])
         dim = frame.shape
 
         # Getting camera matrix
@@ -99,12 +95,36 @@ class Player():
         print(rotation)
 
 
-    """ Isolating the face in the webcam. (Not needed)
-    def faceIsolation(self)
-        static_back = None
-        motion_list  = [None, None]
-        time=[]
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) """
+    """ Isolating the face in the webcam. """
+    def get2DRef(self, frame):
+        # Convert the frame to a gray frame to make it easier to find features
+        grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
+
+        # Detect the face from the passed in frame
+        faces = self.detector(grayFrame)
+        for face in faces:
+            # Coordinates for drawing a box around the detected face
+            x1 = face.left()
+            y1 = face.top()
+            x2 = face.right()
+            y2 = face.bottom()
+
+            # Get the positions on the face which correspond to the dots in landmarks.dat
+            landmarks = self.predictor(grayFrame, face)
+            
+            # Return an array which represents the 2 dimensional picture coordinates which 
+            # can be converted to a 3 dimensional reference
+            #cv2.rectangle(frame, (x1, y1), (x2, y2), 3, (255, 0, 0), -1)
+            return np.array([
+                (landmarks.part(33).x, landmarks.part(33).y),
+                (landmarks.part(8).x, landmarks.part(8).y),
+                (landmarks.part(36).x, landmarks.part(36).y),
+                (landmarks.part(45).x, landmarks.part(45).y),
+                (landmarks.part(48).x, landmarks.part(48).y),
+                (landmarks.part(54).x, landmarks.part(54).y)
+            ], dtype="double")
+            
+            
         
         
         
