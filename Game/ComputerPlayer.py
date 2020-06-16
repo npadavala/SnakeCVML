@@ -15,10 +15,16 @@ class Player():
 
     def __init__(self, game):
         self.game = game
+
+        # Gets the detector and predictor methods from dlib import
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor("landmarks.dat")
+
+        # Creates the frame variable
         self.frame = ''
         self.frameCount = 0
+        self.coords = [(0,0), (0,0)]
+
 
     """ Creates a game where a player can play snake. """
     def runGame(self):
@@ -58,10 +64,7 @@ class Player():
         check, self.frame = self.video.read()
 
         # Detect the face in current webcam frame
-        self.frameCount += 1
-        self.frameCount = self.frameCount % 15
-        if self.frameCount == 0:
-            self.detectFace()
+        self.detectFace()
         
         # Convert and resize the frame so that it is usable in pygame
         self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
@@ -95,8 +98,11 @@ class Player():
                             [0, 0, 1]], dtype="double")
         
         # run estimation using cv2.solvePnP - gives us rotation and translation vectors
-        success, rotation, translation = cv2.solvePnP(three_dim_ref, two_dim_ref, camera_matrix, np.zeros((4, 1)))
-        print(rotation)
+        try:
+            success, rotation, translation = cv2.solvePnP(three_dim_ref, two_dim_ref, camera_matrix, np.zeros((4, 1)))
+        except cv2.error as e:
+            return
+        
 
 
     """ Isolating the face in the webcam. """
@@ -106,26 +112,29 @@ class Player():
 
         # Detect the face from the passed in frame
         faces = self.detector(grayFrame)
-        landmarks = ""
+
+        # Get the face and find the landmarks from that face
         for face in faces:
             # Coordinates for drawing a box around the detected face
             x1 = face.left()
             y1 = face.top()
             x2 = face.right()
             y2 = face.bottom()
+            
+            # Add a rectangle around the detected face for the current frame
+            cv2.rectangle(self.frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
 
             # Get the positions on the face which correspond to the dots in landmarks.dat
             landmarks = self.predictor(grayFrame, face)
-            
+
             # Return an array which represents the 2 dimensional picture coordinates which 
             # can be converted to a 3 dimensional reference
-            cv2.rectangle(self.frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
-        return np.array([
-            (landmarks.part(33).x, landmarks.part(33).y),
-            (landmarks.part(8).x, landmarks.part(8).y),
-            (landmarks.part(36).x, landmarks.part(36).y),
-            (landmarks.part(45).x, landmarks.part(45).y),
-            (landmarks.part(48).x, landmarks.part(48).y),
-            (landmarks.part(54).x, landmarks.part(54).y)
-        ], dtype="double") 
+            return np.array([
+                (landmarks.part(33).x, landmarks.part(33).y),
+                (landmarks.part(8).x, landmarks.part(8).y),
+                (landmarks.part(36).x, landmarks.part(36).y),
+                (landmarks.part(45).x, landmarks.part(45).y),
+                (landmarks.part(48).x, landmarks.part(48).y),
+                (landmarks.part(54).x, landmarks.part(54).y)
+            ], dtype="double") 
             
