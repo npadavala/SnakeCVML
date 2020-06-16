@@ -62,8 +62,9 @@ class Player():
         check, self.frame = self.video.read()
 
         # Detect the face in current webcam frame
-        self.detectFace()
-        
+        rotation = self.detectFace()
+        self.detectDirection(rotation)
+
         # Convert and resize the frame so that it is usable in pygame
         self.frame = cv2.cvtColor(self.frame, cv2.COLOR_BGR2RGB)
         self.frame = np.rot90(self.frame)
@@ -72,6 +73,10 @@ class Player():
         # Add the frame to the pygame 
         self.frame = pygame.surfarray.make_surface(self.frame)
         self.game.addVideoFeed(self.frame)
+
+    """ Gets the direction from the rotation matrix and figures out which direction the snake needs to move in. """
+    def detectDirection(self, rotation):
+        return None
 
     """ Detects the face and calculates which direction the face is turned in for snake movements. """
     def detectFace(self):
@@ -105,6 +110,7 @@ class Player():
         # See this link https://www.learnopencv.com/head-pose-estimation-using-opencv-and-dlib/#code for more info
         try:
             success, rotation, translation = cv2.solvePnP(three_dim_ref, two_dim_ref, camera_matrix, np.zeros((4, 1)))
+            print(rotation)
             return rotation
         
         # Catches an error where the face isn't properly detected 
