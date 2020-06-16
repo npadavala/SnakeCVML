@@ -5,7 +5,7 @@ program or it allows the player to play snake. """
 import pygame
 import Player
 import PlayerSnake
-import ComputerVision
+import ComputerPlayer
 
 # Creates the snake game.
 game = PlayerSnake.Snake()
@@ -13,13 +13,13 @@ game = PlayerSnake.Snake()
 # Creates rectangle for the player game button
 player_text = game.font.render("Default", True, game.black, game.green)
 player_text_rect = player_text.get_rect()
-player_text_rect.center = (game.windowWidth // 4, 60)
+player_text_rect.center = (200, 60)
 game.screen.blit(player_text, player_text_rect)
 
 # Creates rectangle for the computer vision game button
 computer_text = game.font.render("CV Game", True, game.black, game.red)
 computer_text_rect = computer_text.get_rect()
-computer_text_rect.center = (game.windowWidth // 4 * 3, 60)
+computer_text_rect.center = (600, 60)
 game.screen.blit(computer_text, computer_text_rect)
 pygame.display.update()
 
@@ -39,7 +39,8 @@ def playerGame():
 
 """ Starts a game which the player can play through physical movements. """
 def computerGame():
-    ComputerVision.startGame(game)
+    cPlayer = ComputerPlayer.Player(game)
+    cPlayer.runGame()
 
 """ Runs the intro sequence until the player clicks the button to
 play a player version of the game. The variable intro will be set to False when
