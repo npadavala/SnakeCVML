@@ -8,7 +8,6 @@ import cv2
 import numpy as np
 import dlib
 
-
 class Player():
     """ Class which runs the computer vision code. The player will need
     to move in the physical direction that they want the snake to move in. """
