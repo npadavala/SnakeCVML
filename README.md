@@ -8,7 +8,7 @@
 * CV2 - Captures the webcam footage
 * numpy - Works with vectors which are calculated from the webcam footage
 * dlib - Takes the webcam footage and finds landmarks on the face
-    - For Windows dlib path dependencies must be added to environment must be added to environment variables when first installing on system
+    - For Windows dlib path dependencies must be added to environment must be added to environment variables when first installing on system.
 
 ## Running the Program
 First, run Game/Main.py. From there, you have two options:
