@@ -23,11 +23,20 @@ class Player():
         # Creates the frame variable
         self.frame = ''
 
+        # Creates a set a default coordinates which are being compared to 
+        # When deciding whether or not the player has turned or not
+        self.defaultTranslation = [0, 0, 0]
+        self.setDefault = 0
+
+        # Offset player needs to move in order to make a move
+        self.xOffset = 100
+        self.yOffset = 75
+
 
     """ Creates a game where a player can play snake. """
     def runGame(self):
         # Start the snake game and start capturing from webcam
-        self.game.startGame(speed = 500)
+        self.game.startGame(speed = 750)
         self.running = True
         self.video = cv2.VideoCapture(0)
 
@@ -35,16 +44,27 @@ class Player():
         if not self.video.isOpened():
             raise IOError("Cannot open webcam")
         
+        # Draws the calibrate button
+        self.drawCalibrate()
+
         while self.running:
             # Updates Display
             pygame.display.update()
+            events = pygame.event.get()
             self.videoCapture()
-
+            
             # Handles events
-            for i in pygame.event.get():
+            for i in events:
                 # Event which occurs every second
                 if i.type == pygame.USEREVENT + 1:
                     self.game.updateSnake()
+                
+                # Checks to see iaf the "Calibrate" button has been clicked
+                elif i.type == pygame.MOUSEBUTTONUP:
+                    click = pygame.mouse.get_pos()
+                    if (click[0] > 520 and click[1] > 45 and click[0] < 680 and click[1] < 80):
+                        self.calibrate()
+                        intro = False
 
                 # Quitting out of the game and the webcam
                 elif i.type == pygame.QUIT:
@@ -53,16 +73,33 @@ class Player():
                     self.video.release()
                     cv2.destroyAllWindows() 
 
-    """ Allows the direction to be set to a different value """
-    def setDirectionChange(self, dir):
-        self.game.setDir(dir)
+    """ Changes the CV button into a Calibrate button so that player 
+    may define where they will control the snake in the frame. """
+    def drawCalibrate(self):
+        computer_text = self.game.font.render("Calibrate", True, self.game.black, self.game.red)
+        computer_text_rect = computer_text.get_rect()
+        computer_text_rect.center = (600, 60)
+        self.game.screen.blit(computer_text, computer_text_rect)
+        pygame.display.update()
+        
 
+    """ Sets game to calibrate on next frame. """
+    def calibrate(self):
+        self.setDefault = 9
+        
     """ Captures video from webcam and adds it to the pygame frame. """
     def videoCapture(self):
         check, self.frame = self.video.read()
 
         # Detect the face in current webcam frame
         rotation = self.detectFace()
+
+        # Set default rotation values if they have not been set yet
+        if (self.setDefault < 10):
+            self.defaultTranslation = rotation
+            self.setDefault += 1
+            
+        # Detect if the player has rotated or not
         self.detectDirection(rotation)
 
         # Convert and resize the frame so that it is usable in pygame
@@ -75,8 +112,20 @@ class Player():
         self.game.addVideoFeed(self.frame)
 
     """ Gets the direction from the rotation matrix and figures out which direction the snake needs to move in. """
-    def detectDirection(self, rotation):
-        return None
+    def detectDirection(self, translation):
+        x_off = translation[0] - self.defaultTranslation[0]
+        y_off = translation[1] - self.defaultTranslation[1]
+        if (abs(x_off) > self.xOffset and abs(x_off) > abs(y_off) * 1.5):
+            if (x_off < 0):
+                self.game.setDir(1)
+            else:
+                self.game.setDir(2)
+        elif (abs(y_off) > self.yOffset):
+            if (y_off < 0):
+                self.game.setDir(3)
+            else:
+                self.game.setDir(4)
+
 
     """ Detects the face and calculates which direction the face is turned in for snake movements. """
     def detectFace(self):
@@ -110,13 +159,12 @@ class Player():
         # See this link https://www.learnopencv.com/head-pose-estimation-using-opencv-and-dlib/#code for more info
         try:
             success, rotation, translation = cv2.solvePnP(three_dim_ref, two_dim_ref, camera_matrix, np.zeros((4, 1)))
-            print(rotation)
-            return rotation
+            return translation
         
         # Catches an error where the face isn't properly detected 
         # and continues running the game with the previous face location
         except cv2.error as e:
-            return np.array([(0, 0, 0)])
+            return self.defaultTranslation
         
 
 
@@ -132,13 +180,18 @@ class Player():
         # Get the face and find the landmarks from that face
         for face in faces:
             # Coordinates for drawing a box around the detected face
-            left = face.left()
-            top = face.top()
-            right = face.right()
-            bottom = face.bottom()
+            if (self.setDefault < 10):
+                self.left = face.left()
+                self.top = face.top()
+                self.right = face.right()
+                self.bottom = face.bottom()
             
-            # Add a rectangle around the detected face for the current frame
-            cv2.rectangle(self.frame, (left, top), (right, bottom), (0, 255, 0), 3)
+            # Add a rectangle around the location of the calibrated face
+            cv2.rectangle(self.frame, (self.left, self.top), (self.right, self.bottom), (255, 0, 0), 3)
+
+            # Add a rectangle around the boundaries the player needs to move to make a move
+            cv2.rectangle(self.frame, (self.left - self.xOffset, self.top - self.yOffset), 
+                            (self.right + self.xOffset, self.bottom + self.yOffset), (0, 255, 0), 3)
 
             # Get the positions on the face which correspond to the dots in landmarks.dat
             landmarks = self.predictor(grayFrame, face)

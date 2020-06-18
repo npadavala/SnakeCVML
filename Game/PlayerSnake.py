@@ -85,12 +85,16 @@ class Snake():
 
         # Moves the snake based on the current direction
         head = self.snakeBody[0][:]
+        # Right
         if (self.dir == 1):
             head[0] += 1
+        # Left
         elif (self.dir == 2):
             head[0] -= 1
+        # Up
         elif (self.dir == 3):
             head[1] -= 1
+        # Down
         else:
             head[1] += 1
         self.snakeBody.insert(0, head)
@@ -119,6 +123,7 @@ class Snake():
         for body in self.snakeBody:
             pygame.draw.rect(self.screen, self.green,
                 (body[0] * 30, body[1] * 30, 27, 27), 0)
+
 
     """ Checks to see if the game is over """
     def checkLose(self):
@@ -194,6 +199,10 @@ class Snake():
     def addVideoFeed(self, frame):
         #Add webcam feed to the pygame window
         self.screen.blit(frame, (775, 175))
+
+    def addCalibrateButton(self):
+        #Add calibrate button to the pygame window
+        return None
 
 """ Converts a given location to a key for openLocations dictionary """
 def convertToKey(location):
